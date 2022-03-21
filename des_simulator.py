@@ -32,6 +32,7 @@ class DES_simulator:
         '''
 
         # discrete event simulator
+        model.clear()
         model.starting_events(self)
         while (not self.calendar.is_empty()) and (self.time <= T):
             self.time, f, data = self.calendar.pop()  # get next event
