@@ -6,7 +6,7 @@ import numpy as np
 d = np.array([[40.0e3]]) # port-terminal distance (m)
 tu = np.array([[4*3600.0]]) # unloading time (s)
 tl = np.array([[8*3600.0]]) # loading time (s)
-nt = np.array([1],dtype=int) # train count of each model
+nt = np.array([2],dtype=int) # train count of each model
 v = np.array([40/3.6]) # train speed (m/s)
 L = np.array([5.0e6]) # train load (kg)
 model = DES_model(d, tu, tl, nt, v, L)
