@@ -34,6 +34,8 @@ class DES_model:
         # queue
         nt = self.distance.shape[1]
         np = self.distance.shape[0]
+        self.log_load = [[1e-10, 0]]
+        self.log_queue = [[1e-10, 0]]
         self.terminal_queue = [[0] for _ in range(nt)]
         self.port_queue = [[0] for _ in range(np)]
         self.terminal_queue_forecast = [[0] for _ in range(nt)]
@@ -57,6 +59,33 @@ class DES_model:
                 simulator.add_event(t, self.on_finish_unloaded_path, data)
                 id += 1
 
+    def queue_time(self):
+        ''' Queue time of railroad system.
+
+        Returns:
+            (float): queue time.
+        '''
+
+        # evaluate productivity
+        log = np.array(self.log_queue)
+        return np.sum(log[:, 1])
+
+    def productivity(self):
+        ''' Prodctivity of railroad system.
+
+        Returns:
+            (numpy array): productivity.
+            (numpy array): production.
+            (numpy array): time.
+        '''
+
+        # evaluate productivity
+        log = np.array(self.log_load)
+        t = log[:, 0]  # time
+        P = log[:, 1]  # production
+        Pt = np.cumsum(P) / t  # productivity
+        return Pt, P, t
+
     def on_finish_unloaded_path(self, simulator, data):
         ''' Callback function for finishing unloaded path.
 
@@ -75,6 +104,7 @@ class DES_model:
         it = data[1]  # terminal index
         im = data[2]  # train model index
         t = max(simulator.time, self.terminal_queue[it][-1]) + self.loading_time[it, im]  # terminal loading time
+        self.log_queue.append([simulator.time, max(simulator.time, self.terminal_queue[it][-1]) - simulator.time])
         self.terminal_queue[it].append(t)
         simulator.add_event(t, self.on_finish_loading, data)
 
@@ -85,6 +115,9 @@ class DES_model:
             simulator (:obj:DES_simulator): DES simulator.
             data (list): port, terminal and train model indexes.
         '''
+
+        # log
+        self.log_load.append([simulator.time, self.train_load[data[2]]])
 
         # debug information
         if self.verbose:
@@ -118,6 +151,7 @@ class DES_model:
         ip = data[0]  # port index
         im = data[2]  # train model index
         t = max(simulator.time, self.port_queue[ip][-1]) + self.unloading_time[ip, im]  # port unloading time
+        self.log_queue.append([simulator.time, max(simulator.time, self.port_queue[ip][-1]) - simulator.time])
         self.port_queue[ip].append(t)
         simulator.add_event(t, self.on_finish_unloading, data)
 
